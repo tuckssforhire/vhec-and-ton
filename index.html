@@ -51,7 +51,7 @@
       <p class="script">Choose a page to open, Mommy.</p>
       <div class="chapter-list">
         <button class="chapter-link" data-page="0"><b>1</b><span>Where it all began<small>November 9, 2002</small></span></button>
-        <button class="chapter-link" data-page="1"><b>2</b><span>The day we said “I do”<small>September 20, 2008</small></span></button>
+        <button class="chapter-link" data-page="1"><b>2</b><span>The road to “I do”<small>Our secret love became forever</small></span></button>
         <button class="chapter-link" data-page="2"><b>3</b><span>We became Mommy &amp; Daddy<small>JM · November 23, 2009</small></span></button>
         <button class="chapter-link" data-page="3"><b>4</b><span>Our family grew again<small>Ron Ron · January 20, 2015</small></span></button>
         <button class="chapter-link" data-page="4"><b>5</b><span>All the years between<small>Little moments, our whole life</small></span></button>
@@ -90,10 +90,19 @@
     </section>
 
     <section class="page reveal">
-      <p class="chapter">Chapter two</p><h2>The day we said “I do”</h2>
+      <p class="chapter">Chapter two</p><h2>The road to “I do”</h2>
       <div class="milestone">
         <figure class="polaroid portrait"><img src="photos/wedding-01.png" alt="Vhec and Ton in front of the altar on their wedding day"><figcaption class="caption">The day we became husband and wife ♥</figcaption></figure>
-        <div><div class="date-tag">September 20, 2008</div><p class="lead">From young college sweethearts to husband and wife. I didn’t know exactly what the years ahead would bring. I only knew that I wanted you beside me.</p><p class="script">The day our forever officially began. ♥</p></div>
+        <div><div class="date-tag">2002 → September 20, 2008</div><p class="lead">Before we could stand before everyone as husband and wife, Mommy, we first had to protect a love that almost no one was allowed to know about.</p><p class="script">Ours was a love that learned how to wait, travel, persevere, and keep its promises. ♥</p></div>
+      </div>
+      <div class="story-beats">
+        <p><strong>Our secret.</strong> Your parents did not allow you to have a boyfriend until you graduated from college, so for years we kept our relationship hidden from them. It was not always easy, but we found a way to stay together.</p>
+        <p><strong>Every Friday.</strong> You studied at Tomas del Rosario College in Balanga City, while home was more than 40 kilometers away in Mariveles. Every Friday, when you were coming home for the weekend, I would fetch you from school. That long road became part of our love story—one trip at a time, one weekend at a time.</p>
+        <p><strong>The one time I let you go.</strong> There was a time when we broke up. Leaving you was a mistake I made only once, because I realized that the life I wanted was still the life with you in it. I returned, and we chose to keep going together.</p>
+        <p><strong>When the secret came out.</strong> Eventually, your father learned about us. You stood up for me and defended our relationship. I also faced him myself and promised that our love would not destroy your future—that we would both finish college and take our responsibilities seriously.</p>
+        <p><strong>A promise kept.</strong> We did what we said we would do. We persevered through the distance, the secrecy, and all the difficulties. We both graduated from college, proving that loving each other did not have to mean giving up our dreams.</p>
+        <p><strong>Our sudden wedding.</strong> By then, our relationship had grown deeper and more intimate. When your period was delayed, a visit to the OB-GYN brought the truth into the open. Our parents knew that marriage was where our journey was already heading, so everything happened sooner and more suddenly than we had expected.</p>
+        <p><strong>September 20, 2008.</strong> The wedding may have come together quickly, but the love behind it was not sudden at all. It had already survived six years of waiting, traveling, hiding, mistakes, forgiveness, courage, and promises kept. That was the day our secret love finally became our forever. ♥</p>
       </div>
       <div class="memory-strip" aria-label="Our wedding-day memories">
         <figure class="polaroid"><img src="photos/wedding-02.png" alt="Vhec and Ton together inside their wedding car"><figcaption class="caption">Just married—and ready for our journey</figcaption></figure>
@@ -239,7 +248,7 @@
   <script>
     const openBook=document.getElementById('openBook'),book=document.getElementById('scrapbook'),cover=document.getElementById('cover'),music=document.getElementById('music'),menu=document.getElementById('chapterMenu'),counter=document.getElementById('pageCounter');
     const pages=[...book.querySelectorAll('.page')];let currentPage=0;
-    const chapterNames=['Where it all began','The day we said “I do”','We became Mommy & Daddy','Our family grew again','All the years between','Things I love about you','A letter for Mommy','Our story so far'];
+    const chapterNames=['Where it all began','The road to “I do”','We became Mommy & Daddy','Our family grew again','All the years between','Things I love about you','A letter for Mommy','Our story so far'];
     pages.forEach((page,i)=>{const nav=document.createElement('nav');nav.className='chapter-nav';nav.setAttribute('aria-label','Chapter navigation');nav.innerHTML=`<button class="nav-btn" data-action="prev">${i===0?'← Chapters':'← Previous'}</button><button class="nav-center" data-action="menu">All chapters</button><button class="nav-btn primary" data-action="next">${i===pages.length-1?'Start again ♥':'Next chapter →'}</button>`;page.appendChild(nav)});
     function showMenu(){cover.style.display='none';book.style.display='none';counter.style.display='none';music.style.display='grid';menu.style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
     function showCover(){menu.style.display='none';book.style.display='none';counter.style.display='none';const hc=document.getElementById('heartCounter');if(hc)hc.style.display='none';music.style.display='none';closeMusic();cover.style.display='grid';requestAnimationFrame(()=>cover.style.opacity='1');window.scrollTo({top:0,behavior:'smooth'})}
