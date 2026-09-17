@@ -723,6 +723,26 @@
 	  color:#8b6e62;
 	  margin-top:3px
 	}
+	.chapter-link.locked {
+	  cursor:not-allowed;
+	  opacity:.5;
+	  filter:grayscale(.65);
+	  background:#eee7dc;
+	  box-shadow:none
+	}
+	.chapter-link.locked:after {
+	  content:"🔒";
+	  margin-left:auto;
+	  font-size:1.1rem;
+	  filter:grayscale(1)
+	}
+	.chapter-link.locked:hover,
+	.chapter-link.locked:focus-visible {
+	  transform:none;
+	  background:#eee7dc;
+	  box-shadow:none;
+	  outline:none
+	}
 	.menu-back,.nav-btn {
 	  border:1px solid rgba(111,33,55,.35);
 	  border-radius:999px;
@@ -1562,7 +1582,7 @@
     <div class="contents-card">
       <p class="chapter">Vhec &amp; Ton</p>
       <h2>Our Story</h2>
-      <p class="script">Choose a page to open, Mommy.</p>
+      <p class="script">Open each chapter in order, Mommy. Only the chapters you have already opened will stay available here.</p>
       <div class="chapter-list">
         <button class="chapter-link" data-page="0"><b>1</b><span>Where it all began<small>November 9, 2002</small></span></button>
         <button class="chapter-link" data-page="1"><b>2</b><span>The road to “I do”<small>Our secret love became forever</small></span></button>
@@ -1793,15 +1813,20 @@
   <button class="music" id="music" type="button" aria-label="Pause our song, Love of My Life by South Border" title="Pause our song"><span class="music-icon" aria-hidden="true">❚❚</span><span class="music-label">Our Song</span></button>
   <script>
     const openBook=document.getElementById('openBook'),book=document.getElementById('scrapbook'),cover=document.getElementById('cover'),music=document.getElementById('music'),menu=document.getElementById('chapterMenu'),counter=document.getElementById('pageCounter');
-    const pages=[...book.querySelectorAll('.page')];let currentPage=0;
+    const pages=[...book.querySelectorAll('.page')],chapterLinks=[...document.querySelectorAll('.chapter-link')];let currentPage=0;
     const chapterNames=['Where it all began','The road to “I do”','We became Mommy & Daddy','Our family grew again','All the years between','Things I love about you','A letter for Mommy','Our story so far'];
+    const chapterProgressKey='vhec-ton-opened-chapters';let highestOpenedChapter=-1;
+    try{const savedValue=localStorage.getItem(chapterProgressKey),savedChapter=Number(savedValue);if(savedValue!==null&&Number.isInteger(savedChapter))highestOpenedChapter=Math.max(-1,Math.min(savedChapter,pages.length-1))}catch(e){}
+    function saveChapterProgress(){try{localStorage.setItem(chapterProgressKey,String(highestOpenedChapter))}catch(e){}}
+    function updateChapterAccess(){chapterLinks.forEach((button,i)=>{const available=i===0||i<=highestOpenedChapter;button.disabled=!available;button.classList.toggle('locked',!available);button.setAttribute('aria-disabled',String(!available));button.title=available?'Open '+chapterNames[i]:'Open the earlier chapters first'})}
     pages.forEach((page,i)=>{const nav=document.createElement('nav');nav.className='chapter-nav';nav.setAttribute('aria-label','Chapter navigation');nav.innerHTML=`<button class="nav-btn" data-action="prev">${i===0?'← Chapters':'← Previous'}</button><button class="nav-center" data-action="menu">All chapters</button><button class="nav-btn primary" data-action="next">${i===pages.length-1?'Start again ♥':'Next chapter →'}</button>`;page.appendChild(nav)});
-    function showMenu(){cover.style.display='none';book.style.display='none';counter.style.display='none';music.style.display='grid';menu.style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
+    function showMenu(){updateChapterAccess();cover.style.display='none';book.style.display='none';counter.style.display='none';music.style.display='grid';menu.style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
     function showCover(){menu.style.display='none';book.style.display='none';counter.style.display='none';const hc=document.getElementById('heartCounter');if(hc)hc.style.display='none';music.style.display='none';closeMusic();cover.style.display='grid';requestAnimationFrame(()=>cover.style.opacity='1');window.scrollTo({top:0,behavior:'smooth'})}
-    function showPage(i){currentPage=Math.max(0,Math.min(i,pages.length-1));menu.style.display='none';book.style.display='block';pages.forEach((p,n)=>p.classList.toggle('active',n===currentPage));counter.textContent=`${currentPage+1} / ${pages.length} · ${chapterNames[currentPage]}`;counter.style.display='block';requestAnimationFrame(()=>pages[currentPage].querySelectorAll('.scratch-card').forEach(card=>card._initScratch?.()));window.scrollTo({top:0,behavior:'smooth'});hearts(currentPage===7?10:3)}
+    function showPage(i){const requestedPage=Math.max(0,Math.min(i,pages.length-1));if(requestedPage>highestOpenedChapter+1){showMenu();return}currentPage=requestedPage;if(currentPage>highestOpenedChapter){highestOpenedChapter=currentPage;saveChapterProgress();updateChapterAccess()}menu.style.display='none';book.style.display='block';pages.forEach((p,n)=>p.classList.toggle('active',n===currentPage));counter.textContent=`${currentPage+1} / ${pages.length} · ${chapterNames[currentPage]}`;counter.style.display='block';requestAnimationFrame(()=>pages[currentPage].querySelectorAll('.scratch-card').forEach(card=>card._initScratch?.()));window.scrollTo({top:0,behavior:'smooth'});hearts(currentPage===7?10:3)}
     openBook.addEventListener('click',()=>{startMusic();cover.style.transition='opacity .55s';cover.style.opacity='0';setTimeout(showMenu,520);hearts(10)});
     document.getElementById('menuToCover').addEventListener('click',showCover);
-    document.querySelectorAll('.chapter-link').forEach(b=>b.addEventListener('click',()=>showPage(Number(b.dataset.page))));
+    chapterLinks.forEach(b=>b.addEventListener('click',()=>showPage(Number(b.dataset.page))));
+    updateChapterAccess();
     book.addEventListener('click',e=>{const action=e.target.closest('[data-action]')?.dataset.action;if(!action)return;if(action==='menu')showMenu();else if(action==='prev'){currentPage===0?showMenu():showPage(currentPage-1)}else if(action==='next'){currentPage===pages.length-1?showCover():showPage(currentPage+1)}});
     document.addEventListener('keydown',e=>{if(document.getElementById('flipbook').classList.contains('open')||document.getElementById('heartReward').classList.contains('show'))return;if(book.style.display!=='block')return;if(e.key==='ArrowRight')showPage(Math.min(currentPage+1,pages.length-1));if(e.key==='ArrowLeft')currentPage?showPage(currentPage-1):showMenu();if(e.key==='Escape')showMenu()});
     document.querySelectorAll('.reason').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('open');if(b.classList.contains('open'))hearts(3)}));
