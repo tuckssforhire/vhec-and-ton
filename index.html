@@ -1508,43 +1508,87 @@
 	  bottom:0;
 	  width:50%;
 	  z-index:7;
-	  background:#fffaf0;
-	  overflow:hidden;
-	  backface-visibility:hidden;
+	  background:transparent;
+	  overflow:visible;
 	  transform-style:preserve-3d;
 	  pointer-events:none
+	}
+	.page-flipper-face {
+	  position:absolute;
+	  inset:0;
+	  width:100%;
+	  min-height:0;
+	  height:100%;
+	  border-radius:0;
+	  backface-visibility:hidden;
+	  -webkit-backface-visibility:hidden;
+	  transform-style:preserve-3d;
+	  overflow:hidden
+	}
+	.page-flipper-face.front {
+	  z-index:2;
+	  transform:rotateY(0)
+	}
+	.page-flipper.forward .page-flipper-face.back {
+	  transform:rotateY(180deg)
+	}
+	.page-flipper.backward .page-flipper-face.back {
+	  transform:rotateY(-180deg)
+	}
+	.page-flipper-face:after {
+	  content:"";
+	  position:absolute;
+	  inset:0;
+	  pointer-events:none;
+	  background:linear-gradient(90deg,rgba(62,35,28,.24),transparent 24%,transparent 76%,rgba(62,35,28,.12));
+	  opacity:.42
 	}
 	.page-flipper.forward {
 	  right:0;
 	  transform-origin:left center;
-	  animation:realFlipNext .72s ease-in-out forwards
+	  animation:realFlipNext .88s cubic-bezier(.45,.05,.2,1) forwards
 	}
 	.page-flipper.backward {
 	  left:0;
 	  transform-origin:right center;
-	  animation:realFlipPrev .72s ease-in-out forwards
+	  animation:realFlipPrev .88s cubic-bezier(.45,.05,.2,1) forwards
+	}
+	.album-book.turning>.album-leaf {
+	  pointer-events:none
 	}
 	.page-flipper .album-develop {
 	  display:none
 	}
 	@keyframes realFlipNext {
-	  from {
+	  0% {
 		transform:rotateY(0);
 		box-shadow:-3px 0 10px rgba(0,0,0,.15)
 	  }
-	  to {
+	  48% {
+		box-shadow:-22px 4px 28px rgba(0,0,0,.38)
+	  }
+	  52% {
+		box-shadow:18px 4px 25px rgba(0,0,0,.3)
+	  }
+	  100% {
 		transform:rotateY(-180deg);
-		box-shadow:-18px 0 25px rgba(0,0,0,.35)
+		box-shadow:3px 0 8px rgba(0,0,0,.12)
 	  }
 	}
 	@keyframes realFlipPrev {
-	  from {
+	  0% {
 		transform:rotateY(0);
 		box-shadow:3px 0 10px rgba(0,0,0,.15)
 	  }
-	  to {
+	  48% {
+		box-shadow:22px 4px 28px rgba(0,0,0,.38)
+	  }
+	  52% {
+		box-shadow:-18px 4px 25px rgba(0,0,0,.3)
+	  }
+	  100% {
 		transform:rotateY(180deg);
-		box-shadow:18px 0 25px rgba(0,0,0,.35)
+		box-shadow:-3px 0 8px rgba(0,0,0,.12)
 	  }
 	}
 	/* ==============================
@@ -1843,15 +1887,17 @@
     function closeMusic(){ourSong.pause();ourSong.currentTime=0;setMusicButton(false)}
     let albumPhotos=[];const chapterAlbumStates=new Map();
     const flipbook=document.getElementById('flipbook'),albumCover=document.getElementById('albumCover'),albumBook=document.getElementById('albumBook'),albumControls=document.getElementById('albumControls'),albumProgress=document.getElementById('albumProgress'),albumHint=document.getElementById('albumHint'),albumPrev=document.getElementById('albumPrev'),albumNext=document.getElementById('albumNext');
-    const albumLeaves=[document.getElementById('albumLeft'),document.getElementById('albumRight')],albumImgs=[document.getElementById('albumPhotoLeft'),document.getElementById('albumPhotoRight')],albumCaptions=[document.getElementById('albumCaptionLeft'),document.getElementById('albumCaptionRight')],developButtons=[document.getElementById('developLeft'),document.getElementById('developRight')];let albumSpread=0,pendingSpread=0,albumOpened=false;const developedAlbumPhotos=new Set();
-    function openAlbum(photos,title,pageIndex){albumPhotos=photos;pendingSpread=0;albumSpread=0;albumOpened=false;developedAlbumPhotos.clear();(chapterAlbumStates.get(pageIndex)||[]).forEach(i=>developedAlbumPhotos.add(i));document.getElementById('albumCoverTitle').textContent=title;albumCover.hidden=false;albumBook.classList.remove('opened','turn-next','turn-prev');albumControls.hidden=true;albumHint.textContent='Tap the centered cover to open this chapter.';flipbook.classList.add('open');document.body.style.overflow='hidden';flipbook.dataset.chapter=pageIndex;albumCover.focus()}
+    const albumLeaves=[document.getElementById('albumLeft'),document.getElementById('albumRight')],developButtons=[document.getElementById('developLeft'),document.getElementById('developRight')];let albumSpread=0,albumOpened=false,albumTurning=false,albumTurnToken=0;const developedAlbumPhotos=new Set();
+    function openAlbum(photos,title,pageIndex){albumTurnToken++;albumTurning=false;albumBook.querySelectorAll('.page-flipper').forEach(el=>el.remove());albumPhotos=photos;albumSpread=0;albumOpened=false;developedAlbumPhotos.clear();(chapterAlbumStates.get(pageIndex)||[]).forEach(i=>developedAlbumPhotos.add(i));document.getElementById('albumCoverTitle').textContent=title;albumCover.hidden=false;albumBook.classList.remove('opened','turn-next','turn-prev','turning');albumControls.hidden=true;albumHint.textContent='Tap the centered cover to open this chapter.';flipbook.classList.add('open');document.body.style.overflow='hidden';flipbook.dataset.chapter=pageIndex;albumCover.focus()}
     function openAlbumCover(){albumOpened=true;albumCover.hidden=true;albumBook.classList.add('opened');albumControls.hidden=false;renderSpread();developButtons[0].focus()}
-    function closeAlbum(){flipbook.classList.remove('open');document.body.style.overflow=''}
-    function renderSpread(direction=0){if(direction){albumBook.classList.remove('turn-next','turn-prev');void albumBook.offsetWidth;albumBook.classList.add(direction>0?'turn-next':'turn-prev')}for(let side=0;side<2;side++){const i=albumSpread*2+side,photo=albumPhotos[i],leaf=albumLeaves[side];if(photo){albumImgs[side].src=photo.src;albumImgs[side].alt=photo.alt;albumCaptions[side].textContent=photo.caption;developButtons[side].hidden=false;leaf.classList.toggle('developed',developedAlbumPhotos.has(i));developButtons[side].setAttribute('aria-label','Develop '+photo.alt)}else{albumImgs[side].removeAttribute('src');albumImgs[side].alt='';albumCaptions[side].textContent='Our story continues… ♥';developButtons[side].hidden=true;leaf.classList.add('developed')}}updateAlbumControls()}
+    function closeAlbum(){albumTurnToken++;albumTurning=false;albumBook.classList.remove('turning');albumBook.querySelectorAll('.page-flipper').forEach(el=>el.remove());flipbook.classList.remove('open');document.body.style.overflow=''}
+    function populateAlbumLeaf(leaf,spread,side){const i=spread*2+side,photo=albumPhotos[i],img=leaf.querySelector('.album-photo'),caption=leaf.querySelector('.album-caption'),develop=leaf.querySelector('.album-develop');if(photo){img.src=photo.src;img.alt=photo.alt;caption.textContent=photo.caption;develop.hidden=false;leaf.classList.toggle('developed',developedAlbumPhotos.has(i));develop.setAttribute('aria-label','Develop '+photo.alt)}else{img.removeAttribute('src');img.alt='';caption.textContent='Our story continues… ♥';develop.hidden=true;leaf.classList.add('developed')}}
+    function renderSpread(){for(let side=0;side<2;side++)populateAlbumLeaf(albumLeaves[side],albumSpread,side);updateAlbumControls()}
+    function makePageFace(spread,side,face){const leaf=albumLeaves[side].cloneNode(true);leaf.removeAttribute('id');leaf.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));leaf.classList.remove('left','right');leaf.classList.add('page-flipper-face',face);populateAlbumLeaf(leaf,spread,side);return leaf}
     function spreadReady(){return [0,1].every(side=>{const i=albumSpread*2+side;return i>=albumPhotos.length||developedAlbumPhotos.has(i)})}
     function updateAlbumControls(){const total=Math.ceil(albumPhotos.length/2);albumProgress.textContent=`Spread ${albumSpread+1} of ${total}`;albumPrev.disabled=albumSpread===0;albumNext.disabled=albumSpread===total-1||!spreadReady();albumNext.textContent=albumSpread===total-1?'End of book ♥':spreadReady()?'Next pages →':'Develop both photos';albumHint.textContent=albumSpread===total-1&&spreadReady()?'You reached the end of our memories for now. ♥':spreadReady()?'Both photos developed. You can turn the page.':'Tap each photo to develop it before turning the page.'}
     function developAlbum(side){const i=albumSpread*2+side;if(i>=albumPhotos.length||developedAlbumPhotos.has(i))return;developedAlbumPhotos.add(i);chapterAlbumStates.set(Number(flipbook.dataset.chapter),[...developedAlbumPhotos]);albumLeaves[side].classList.add('developed');hearts(3);updateAlbumControls()}
-    function turnAlbum(step){if(!albumOpened)return;if(step>0&&!spreadReady())return;const target=albumSpread+step,total=Math.ceil(albumPhotos.length/2);if(target<0||target>=total)return;const source=albumLeaves[step>0?1:0],flipper=document.createElement('div');flipper.className='page-flipper '+(step>0?'forward':'backward');flipper.innerHTML=source.innerHTML;albumBook.appendChild(flipper);albumSpread=target;renderSpread();setTimeout(()=>flipper.remove(),740)}
+    function turnAlbum(step){if(!albumOpened||albumTurning)return;if(step>0&&!spreadReady())return;const target=albumSpread+step,total=Math.ceil(albumPhotos.length/2);if(target<0||target>=total)return;const current=albumSpread,turningSide=step>0?1:0,incomingSide=step>0?0:1,exposedSide=step>0?1:0,flipper=document.createElement('div'),token=++albumTurnToken;flipper.className='page-flipper '+(step>0?'forward':'backward');flipper.append(makePageFace(current,turningSide,'front'),makePageFace(target,incomingSide,'back'));populateAlbumLeaf(albumLeaves[exposedSide],target,exposedSide);albumTurning=true;albumBook.classList.add('turning');albumPrev.disabled=true;albumNext.disabled=true;albumHint.textContent='Turning the page…';albumBook.appendChild(flipper);setTimeout(()=>{if(token!==albumTurnToken)return;albumSpread=target;renderSpread();flipper.remove();albumBook.classList.remove('turning');albumTurning=false},900)}
     pages.forEach((page,pageIndex)=>{const photos=[...page.querySelectorAll('.polaroid img')].map(img=>({src:img.src,alt:img.alt,caption:img.closest('.polaroid').querySelector('.caption')?.textContent||img.alt}));if(!photos.length)return;page.classList.add('has-chapter-book');const slot=document.createElement('div');slot.className='chapter-book-slot';slot.innerHTML=`<button class="chapter-book-launch" aria-label="Open ${chapterNames[pageIndex]} photo book"><span>Chapter ${pageIndex+1}</span><b>${chapterNames[pageIndex]}</b><small>Open ${photos.length} ${photos.length===1?'memory':'memories'} 📖</small></button>`;const anchor=page.querySelector('.photo-grid,.memory-strip');anchor.before(slot);slot.querySelector('button').addEventListener('click',()=>openAlbum(photos,chapterNames[pageIndex],pageIndex))});albumCover.addEventListener('click',openAlbumCover);developButtons.forEach((b,side)=>b.addEventListener('click',()=>developAlbum(side)));albumPrev.addEventListener('click',()=>turnAlbum(-1));albumNext.addEventListener('click',()=>turnAlbum(1));document.getElementById('albumClose').addEventListener('click',closeAlbum);flipbook.addEventListener('click',e=>{if(e.target===flipbook)closeAlbum()});document.addEventListener('keydown',e=>{if(!flipbook.classList.contains('open'))return;if(e.key==='ArrowRight')turnAlbum(1);if(e.key==='ArrowLeft')turnAlbum(-1);if(e.key==='Escape')closeAlbum()});
     const heartCounter=document.getElementById('heartCounter'),heartReward=document.getElementById('heartReward'),heartRewardClose=document.getElementById('heartRewardClose');let foundHearts=0,lastHeartButton=null;function showHeartReward(){heartReward.classList.add('show');document.body.style.overflow='hidden';heartRewardClose.focus();hearts(28)}function closeHeartReward(){heartReward.classList.remove('show');document.body.style.overflow='';lastHeartButton?.focus()}heartRewardClose.addEventListener('click',closeHeartReward);heartReward.addEventListener('click',e=>{if(e.target===heartReward)closeHeartReward()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&heartReward.classList.contains('show'))closeHeartReward()});[[0,'82%','13%'],[1,'8%','48%'],[2,'88%','62%'],[3,'9%','72%'],[4,'85%','38%']].forEach(([i,left,top],n)=>{const b=document.createElement('button');b.className='hidden-love';b.textContent='♡';b.style.left=left;b.style.top=top;b.setAttribute('aria-label','Hidden heart '+(n+1));b.addEventListener('click',()=>{if(b.classList.contains('found'))return;b.classList.add('found');b.textContent='♥';foundHearts++;heartCounter.textContent='♥ '+foundHearts+' / 5 found';lastHeartButton=b;const t=document.createElement('div');t.className='heart-toast';t.textContent=foundHearts===5?'Every heart is yours, Mommy! ♥':'You found a hidden heart!';document.body.appendChild(t);setTimeout(()=>t.remove(),2300);hearts(6);if(foundHearts===5)setTimeout(showHeartReward,650)});pages[i].appendChild(b)});
     const originalShowPage=showPage;showPage=function(i){originalShowPage(i);heartCounter.style.display='block'};const originalShowMenu=showMenu;showMenu=function(){originalShowMenu();heartCounter.style.display=foundHearts?'block':'none'};document.querySelectorAll('.scratch-card').forEach(setupScratch);
